@@ -1,48 +1,53 @@
 #!/usr/bin/env bash
 
+# bail-delete v0.5
+# wipe the account and local state
+
 __url="https://api.mail.tm"
 __cache="${XDG_STATE_HOME:-$HOME/.config/state}/bail"
 __acc="$__cache/account"
 __v="0.5"
 
+# help
 if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
-	printf 'bail-delete v%s\n' "$__v"
-	printf 'usage: bail-delete [-y]\n\n'
-	printf 'permanently delete the current account from mail.tm and remove local cache\n\n'
-	printf 'options:\n'
-	printf '  -y              bypass confirmation prompt\n'
-	printf '  -h, --help      show this help message\n'
-	printf '  -v, --version   show version information\n\n'
-	printf 'examples:\n'
-	printf '  bail delete\n'
-	printf '  bail delete -y\n'
-	exit 0
+    printf 'bail-delete v%s\n' "$__v"
+    printf 'Usage: bail delete [-y]\n\n'
+    printf 'Permanently delete the current account and remove local configuration.\n\n'
+    printf 'Options:\n'
+    printf '  -y              Bypass confirmation prompt\n'
+    printf '  -h, --help      Show this help message\n'
+    printf '  -v, --version   Show version information\n\n'
+    printf 'Examples:\n'
+    printf '  bail delete\n'
+    printf '  bail delete -y\n'
+    exit 0
 fi
 
+# version
 if [[ "$1" == "-v" || "$1" == "--version" ]]; then
-	printf 'bail-delete v%s\n' "$__v"
-	exit 0
+    printf 'bail-delete v%s\n' "$__v"
+    exit 0
 fi
 
 if [[ -z "$__token" ]]; then
-	. "${0%/*}/bail-token"
+    . "${0%/*}/bail-token"
 fi
 
 if [[ "$1" != "-y" ]] && [[ -t 0 ]]; then
-	printf "Are you sure you want to delete account %s? [y/N] " "$addr"
-	read -r resp
-	if [[ ! "$resp" =~ ^[yY](es)?$ ]]; then
-		printf "Aborted.\n"
-		exit 0
-	fi
+    printf "Are you sure you want to delete account %s? [y/N] " "$addr"
+    read -r resp
+    if [[ ! "$resp" =~ ^[yY](es)?$ ]]; then
+        printf "Aborted.\n"
+        exit 0
+    fi
 fi
 
 curl -s -X DELETE "$__url/accounts/$acc_id" \
-	-H "Authorization: Bearer $__token" >/dev/null
+    -H "Authorization: Bearer $__token" >/dev/null
 
 if [[ $? -ne 0 ]]; then
-	printf "error: failed to delete account from server\n" >&2
-	exit 1
+    printf "error: deletion failed\n" >&2
+    exit 1
 fi
 
 rm -f "$__acc"

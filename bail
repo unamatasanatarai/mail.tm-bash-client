@@ -7,35 +7,34 @@ __v="0.5"
 cmd="${1:-help}"
 [[ $# -gt 0 ]] && shift
 
-# handle "bail help <cmd>"
+# handle "help <command>" and "<command> help"
 if [[ "$cmd" == "help" && $# -gt 0 ]]; then
-    cmd="$1"
-    set -- "--help"
+	cmd="$1"
+	set -- "--help"
 fi
 
 case "$cmd" in
 create | token | me | messages | read | delete | domain)
-    "${0%/*}/bail-$cmd" "$@"
-    ;;
+	"${0%/*}/bail-$cmd" "$@"
+	;;
 help | *)
-    printf 'Bail - the mail.tm bash client v%s\n\n' "$__v"
-    printf 'usage: bail <command> [options]\n\n'
-    printf 'commands:\n'
-    printf '  create [prefix] [-p pw]   provision a new account (deletes previous)\n'
-    printf '  domain                    display the first available domain\n'
-    printf '  token                     generate an api authentication token\n'
-    printf '  me                        show current account profile data\n'
-    printf '  messages                  list all messages in the mailbox\n'
-    printf '  read <n>                  display content of message at index n\n'
-    printf '  delete                    wipe the account and local state\n\n'
-    printf 'options:\n'
-    printf '  -h, --help                show this help message or command help\n'
-    printf '  -v, --version             show version information\n\n'
-    printf 'examples:\n'
-    printf '  bail create myuser -p s3cr3t\n'
-    printf '  bail messages\n'
-    printf '  bail read 1\n'
-    printf '  bail help create\n'
-    exit 0
-    ;;
+	printf 'Bail - High-performance Mail.tm CLI v%s\n\n' "$__v"
+	printf 'Usage: bail <command> [options]\n\n'
+	printf 'Commands:\n'
+	printf '  create [prefix] [-p pw]   Provision a new account (replaces current)\n'
+	printf '  domain                    Display the first available domain\n'
+	printf '  token                     Generate an API authentication token\n'
+	printf '  me                        Show current account profile and quota\n'
+	printf '  messages                  List all messages in the mailbox\n'
+	printf '  read <index>              Display content of a specific message\n'
+	printf '  delete                    Permanently wipe account and local state\n\n'
+	printf 'Options:\n'
+	printf '  -h, --help                Show help for a specific command\n'
+	printf '  -v, --version             Show version information\n\n'
+	printf 'Examples:\n'
+	printf '  bail create myuser -p s3cr3t\n'
+	printf '  bail messages\n'
+	printf '  bail help read\n'
+	exit 0
+	;;
 esac

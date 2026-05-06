@@ -1,33 +1,38 @@
 #!/usr/bin/env bash
 
+# bail-token v0.5
+# generate an api authentication token
+
 __url="https://api.mail.tm"
 __cache="${XDG_STATE_HOME:-$HOME/.config/state}/bail"
 __acc="$__cache/account"
 __tmp="/tmp/bail-token.$$.tmp"
 __v="0.5"
 
+# help
 if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
-	printf 'bail-token v%s\n' "$__v"
-	printf 'usage: bail-token\n\n'
-	printf 'generate an api authentication token from local account data\n\n'
-	printf 'options:\n'
-	printf '  -h, --help      show this help message\n'
-	printf '  -v, --version   show version information\n\n'
-	printf 'examples:\n'
-	printf '  bail token\n'
-	exit 0
+    printf 'bail-token v%s\n' "$__v"
+    printf 'Usage: bail token\n\n'
+    printf 'Generate an API authentication token from local account credentials.\n\n'
+    printf 'Options:\n'
+    printf '  -h, --help      Show this help message\n'
+    printf '  -v, --version   Show version information\n\n'
+    printf 'Examples:\n'
+    printf '  bail token\n'
+    exit 0
 fi
 
+# version
 if [[ "$1" == "-v" || "$1" == "--version" ]]; then
-	printf 'bail-token v%s\n' "$__v"
-	exit 0
+    printf 'bail-token v%s\n' "$__v"
+    exit 0
 fi
 
 trap 'rm -f "$__tmp"*' EXIT
 
 if [[ ! -s "$__acc" ]]; then
-	printf "error: no account found. run 'bail create' first.\n" >&2
-	exit 1
+    printf "error: no account found. run 'bail create' first.\n" >&2
+    exit 1
 fi
 
 addr=$(jq -r '.address' "$__acc")
@@ -35,27 +40,27 @@ pass=$(jq -r '.password' "$__acc")
 acc_id=$(jq -r '.id' "$__acc")
 
 if [[ -z "$addr" || -z "$pass" || "$addr" == "null" || "$pass" == "null" ]]; then
-	printf "error: invalid account data in %s\n" "$__acc" >&2
-	exit 1
+    printf "error: invalid account data. run 'bail create' again.\n" >&2
+    exit 1
 fi
 
 printf '{"address":"%s","password":"%s"}' "$addr" "$pass" >"$__tmp.data"
 curl -s "$__url/token" \
-	-H 'Content-Type: application/json' \
-	-d @"$__tmp.data" >"$__tmp.resp"
+    -H 'Content-Type: application/json' \
+    -d @"$__tmp.data" >"$__tmp.resp"
 
 if [[ $? -ne 0 ]]; then
-	printf "error: connection to %s failed\n" "$__url" >&2
-	exit 1
+    printf "error: authentication failed\n" >&2
+    exit 1
 fi
 
 __token=$(jq -r '.token' "$__tmp.resp")
 
 if [[ -n "$__token" && "$__token" != "null" ]]; then
-	if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-		printf '%s\n' "$__token"
-	fi
+    if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+        printf '%s\n' "$__token"
+    fi
 else
-	printf "error: authentication failed. check your credentials.\n" >&2
-	exit 1
+    printf "error: authentication failed. check your credentials.\n" >&2
+    exit 1
 fi
