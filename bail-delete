@@ -4,12 +4,18 @@ __url="https://api.mail.tm"
 __cache="${XDG_STATE_HOME:-$HOME/.config/state}/bail"
 __acc="$__cache/account"
 __v="0.5"
-if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+
+if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
 	printf 'bail-delete v%s\n' "$__v"
-	printf 'usage: bail-delete [-y] [-h] [-v]\n\n'
+	printf 'usage: bail-delete [-y]\n\n'
 	printf 'permanently delete the current account from mail.tm and remove local cache\n\n'
 	printf 'options:\n'
 	printf '  -y              bypass confirmation prompt\n'
+	printf '  -h, --help      show this help message\n'
+	printf '  -v, --version   show version information\n\n'
+	printf 'examples:\n'
+	printf '  bail delete\n'
+	printf '  bail delete -y\n'
 	exit 0
 fi
 

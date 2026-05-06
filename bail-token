@@ -6,10 +6,15 @@ __acc="$__cache/account"
 __tmp="/tmp/bail-token.$$.tmp"
 __v="0.5"
 
-if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
 	printf 'bail-token v%s\n' "$__v"
-	printf 'usage: bail-token [-h] [-v]\n\n'
-	printf 'generate an api authentication token from local account data\n'
+	printf 'usage: bail-token\n\n'
+	printf 'generate an api authentication token from local account data\n\n'
+	printf 'options:\n'
+	printf '  -h, --help      show this help message\n'
+	printf '  -v, --version   show version information\n\n'
+	printf 'examples:\n'
+	printf '  bail token\n'
 	exit 0
 fi
 

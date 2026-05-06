@@ -3,10 +3,15 @@
 __url="https://api.mail.tm"
 __v="0.5"
 
-if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
 	printf 'bail-me v%s\n' "$__v"
-	printf 'usage: bail-me [-h] [-v]\n\n'
-	printf 'show current account profile data from mail.tm\n'
+	printf 'usage: bail-me\n\n'
+	printf 'show current account profile data from mail.tm\n\n'
+	printf 'options:\n'
+	printf '  -h, --help      show this help message\n'
+	printf '  -v, --version   show version information\n\n'
+	printf 'examples:\n'
+	printf '  bail me\n'
 	exit 0
 fi
 
@@ -18,13 +23,14 @@ if [[ -z "$__token" ]]; then
 	. "${0%/*}/bail-token"
 fi
 
+__tmp_me="/tmp/bail-me.$$.tmp"
 curl -s "$__url/me" \
-	-H "Authorization: Bearer $__token" >"$__tmp.me"
+	-H "Authorization: Bearer $__token" >"$__tmp_me"
 
 if [[ $? -ne 0 ]]; then
 	printf "error: failed to fetch profile data\n" >&2
 	exit 1
 fi
 
-jq . "$__tmp.me"
-rm -f "$__tmp.me"
+jq . "$__tmp_me"
+rm -f "$__tmp_me"

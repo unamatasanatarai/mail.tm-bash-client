@@ -3,10 +3,17 @@
 __url="https://api.mail.tm"
 __v="0.5"
 
-if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
 	printf 'bail-read v%s\n' "$__v"
-	printf 'usage: bail-read <index> [-h] [-v]\n\n'
-	printf 'display the content of a message at the specified index\n'
+	printf 'usage: bail-read <index>\n\n'
+	printf 'display the content of a message at the specified index\n\n'
+	printf 'arguments:\n'
+	printf '  index           the message index from the messages list\n\n'
+	printf 'options:\n'
+	printf '  -h, --help      show this help message\n'
+	printf '  -v, --version   show version information\n\n'
+	printf 'examples:\n'
+	printf '  bail read 1\n'
 	exit 0
 fi
 
