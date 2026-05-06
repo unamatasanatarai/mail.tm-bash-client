@@ -1,76 +1,71 @@
-# Bail
+# Bail - Mail.tm Bash CLI Client
 
 [![Bash](https://img.shields.io/badge/Language-Bash-4EAA25.svg)](https://www.gnu.org/software/bash/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A high-performance, modular Bash CLI client for the Mail.tm API. This tool allows users to provision temporary email accounts, manage tokens, and read messages directly from the terminal with minimal dependencies.
+Bail is a high-performance, modular Bash command-line interface for the Mail.tm API. It enables users to quickly provision temporary email accounts, manage authentication tokens, and read messages directly from the terminal.
 
 ## Features
-
-- **Account Management**: Provision new accounts with custom or random prefixes.
-- **Authentication**: Stateless token generation and management using local cache.
-- **Inbox Interaction**: List and read messages with optimized JSON parsing.
-- **Domain Discovery**: Quickly identify available Mail.tm domains.
-- **Auto-Cleanup**: Automatically wipes previous accounts when provisioning new ones.
+- Provision new temporary email accounts with optional custom prefixes and passwords
+- Automatically delete the previous account when creating a new one
+- Authenticate and manage API tokens via local state caching
+- Retrieve and display the first available domain from Mail.tm
+- View current account profile data
+- List all messages in the inbox
+- Read the content of a specific message
 
 ## Tech Stack
-
-- **Core**: Pure Bash (optimized for performance).
-- **Network**: `curl` for API interactions.
-- **JSON Processing**: `jq` for robust data extraction.
-- **Design**: POSIX-aligned modular architecture with a flat execution flow.
+- Bash
+- `curl`
+- `jq`
 
 ## Project Structure
+- `bail`: Main dispatcher script that routes commands to the corresponding components.
+- `bail-create`: Provisions a new Mail.tm account and deletes the existing one.
+- `bail-delete`: Wipes the current account from the server and local state.
+- `bail-domain`: Fetches and displays the first available domain.
+- `bail-me`: Shows current account profile data.
+- `bail-messages`: Lists all messages in the mailbox.
+- `bail-read`: Displays the content of a specific message by index.
+- `bail-token`: Generates an API authentication token from local account data.
 
-- `bail`: Main dispatcher wrapper for all commands.
-- `bail-create`: Provisions new Mail.tm accounts.
-- `bail-delete`: Deletes accounts and clears local state.
-- `bail-domain`: Fetches and displays available domains.
-- `bail-me`: Displays current account profile and quota.
-- `bail-messages`: Lists messages in the inbox.
-- `bail-read`: Displays the content of specific messages.
-- `bail-token`: Manages API authentication tokens.
+## Installation Instructions
 
-## Installation
-
-1. Clone the repository:
+1. Clone the repository to your local machine.
+2. Ensure you have `curl` and `jq` installed on your system.
+3. Make all scripts executable:
    ```bash
-   git clone https://github.com/unamatasanatarai/mail.tm-bash-api-client.git
-   cd mail.tm-bash-api-client
-   ```
-
-2. Ensure scripts are executable:
-   ```bash
-   chmod +x bail*
-   ```
-
-3. (Optional) Add to your PATH:
-   ```bash
-   export PATH="$PATH:$(pwd)"
+   chmod +x bail bail-*
    ```
 
 ## Usage
 
-The project uses a sub-command pattern similar to `git` or `docker`.
+Use the `bail` dispatcher to run commands:
 
 ```bash
 ./bail <command> [options]
 ```
 
-### Common Commands
-
-- **Create an account**: `./bail create [prefix] [-p password]`
-- **Check inbox**: `./bail messages`
-- **Read a message**: `./bail read <index>`
-- **Show token**: `./bail token`
-- **Delete account**: `./bail delete`
+### Examples
+- **Create an account:**
+  ```bash
+  ./bail create myalias -p mypassword
+  ```
+- **List messages:**
+  ```bash
+  ./bail messages
+  ```
+- **Read a message:**
+  ```bash
+  ./bail read 1
+  ```
+- **View profile:**
+  ```bash
+  ./bail me
+  ```
+- **Delete account:**
+  ```bash
+  ./bail delete
+  ```
 
 ## Configuration
-
-State is stored locally in the XDG state directory:
-- Default: `~/.config/state/bail/account`
-- Controlled via `XDG_STATE_HOME`.
-
-## License
-
-This project is licensed under the MIT License.
+The client stores local state (such as account credentials) in the directory specified by `XDG_STATE_HOME`. If this environment variable is not set, it defaults to `$HOME/.config/state/bail`.
