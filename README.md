@@ -1,8 +1,10 @@
 # Bail - Mail.tm Bash CLI Client
 
-[![Bash](https://img.shields.io/badge/Language-Bash-4EAA25.svg)](https://www.gnu.org/software/bash/)
+[![Bash](https://img.shields.io/badge/Language-Bash-4EAA25.svg)](https://www.gnu.org/software/bash/) [![API](https://img.shields.io/badge/API-Mail.tm-blue.svg)](https://mail.tm/) [![Dependencies](https://img.shields.io/badge/dependencies-curl%20|%20jq-orange.svg)](https://github.com/stedolan/jq) [![OS](https://img.shields.io/badge/OS-Linux%20|%20macOS-blueviolet.svg)]()
 
-Bail is a high-performance, modular Bash command-line interface for the Mail.tm API. It enables users to quickly provision temporary email accounts, manage authentication tokens, and read messages directly from the terminal.
+![Bail Logo](look-at-me.jpg "Bail: The Bash Command-Line Interface for Mail.tm")
+
+Bail: a high-performance, modular Bash command-line interface for the Mail.tm API. It enables users to quickly provision temporary email accounts, manage authentication tokens, and read messages directly from the terminal.
 
 ## Features
 - Provision new temporary email accounts with optional custom prefixes and passwords
