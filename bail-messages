@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 
-# bail-messages v0.5
-# list all messages in the mailbox
-
 __url="https://api.mail.tm"
 __v="0.5"
 
-# help
 if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
     printf 'bail-messages v%s\n' "$__v"
     printf 'Usage: bail messages\n\n'
@@ -19,7 +15,6 @@ if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
     exit 0
 fi
 
-# version
 if [[ "$1" == "-v" || "$1" == "--version" ]]; then
     printf 'bail-messages v%s\n' "$__v"
     exit 0

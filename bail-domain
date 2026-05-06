@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
 
-# bail-domain v0.5
-# display the first available domain
-
 __url="https://api.mail.tm"
 __tmp="/tmp/bail-domain.$$.tmp"
 __v="0.5"
 
-# help
 if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
     printf 'bail-domain v%s\n' "$__v"
     printf 'Usage: bail domain\n\n'
@@ -20,7 +16,6 @@ if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
     exit 0
 fi
 
-# version
 if [[ "$1" == "-v" || "$1" == "--version" ]]; then
     printf 'bail-domain v%s\n' "$__v"
     exit 0
