@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+# defaults
+__url="https://api.mail.tm"
+__cache="${XDG_STATE_HOME:-$HOME/.config/state}/bail"
+__acc="$__cache/account"
+__tmp="/tmp/bail-token.$$.tmp"
+
+# authentication
+if [[ ! -s "$__acc" ]]; then
+    printf "error: no account\n" >&2
+    exit 1
+fi
+
+addr=$(jq -r '.address' "$__acc")
+pass=$(jq -r '.password' "$__acc")
+acc_id=$(jq -r '.id' "$__acc")
+
+if [[ -z "$addr" || -z "$pass" ]]; then
+    printf "error: invalid account data\n" >&2
+    exit 1
+fi
+
+printf '{"address":"%s","password":"%s"}' "$addr" "$pass" >"$__tmp.data"
+curl -s "$__url/token" \
+    -H 'Content-Type: application/json' \
+    -d @"$__tmp.data" >"$__tmp.resp" || exit 1
+
+__token=$(jq -r '.token' "$__tmp.resp")
+
+if [[ -n "$__token" && "$__token" != "null" ]]; then
+    # only print if called directly
+    if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+        printf '%s\n' "$__token"
+    fi
+else
+    printf "error: authentication failed\n" >&2
+    exit 1
+fi
+
+rm -f "$__tmp"*

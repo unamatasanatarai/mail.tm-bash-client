@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# authentication
+. "${0%/*}/bail-token"
+
+curl -s "$__url/me" \
+	-H "Authorization: Bearer $__token" >"$__tmp.me" || exit 1
+jq . "$__tmp.me"
+
+rm -f "$__tmp.me"

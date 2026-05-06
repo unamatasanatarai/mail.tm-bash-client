@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# authentication
+. "${0%/*}/bail-token"
+
+if [[ "$1" != "-y" ]] && [[ -t 0 ]]; then
+	printf "Are you sure you want to delete account %s? [y/N] " "$addr"
+	read -r resp
+	if [[ ! "$resp" =~ ^[yY](es)?$ ]]; then
+		printf "Aborted.\n"
+		exit 0
+	fi
+fi
+
+curl -s -X DELETE "$__url/accounts/$acc_id" \
+	-H "Authorization: Bearer $__token" >/dev/null
+
+rm -f "$__acc"
+printf 'deleted\n'
