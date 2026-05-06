@@ -1,21 +1,35 @@
 #!/usr/bin/env bash
 
-# defaults
 __url="https://api.mail.tm"
 __cache="${XDG_STATE_HOME:-$HOME/.config/state}/bail"
 __acc="$__cache/account"
 __tmp="/tmp/bail-create.$$.tmp"
+__v="0.5"
 
-# cleanup
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+	printf 'bail-create v%s\n' "$__v"
+	printf 'usage: bail-create [prefix] [-p password] [-h] [-v]\n\n'
+	printf 'provision a new mail account. deletes previous account if present.\n\n'
+	printf 'arguments:\n'
+	printf '  prefix          custom email prefix (default: user_RANDOM)\n\n'
+	printf 'options:\n'
+	printf '  -p password     specify a custom account password\n'
+	exit 0
+fi
+
+if [[ "$1" == "-v" || "$1" == "--version" ]]; then
+	printf 'bail-create v%s\n' "$__v"
+	exit 0
+fi
+
 trap 'rm -f "$__tmp"*' EXIT
 
-# initialization
 if [[ ! -d "$__cache" ]]; then
 	mkdir -p "$__cache" || exit 1
 fi
 
 if [[ -s "$__acc" ]]; then
-	"${0%/*}/bail-delete" >/dev/null 2>&1
+	"${0%/*}/bail-delete" -y >/dev/null 2>&1
 fi
 
 password=''
@@ -50,9 +64,18 @@ fi
 printf '{"address":"%s","password":"%s"}' "$address" "$password" >"$__tmp.data"
 curl -s "$__url/accounts" \
 	-H 'Content-Type: application/json' \
-	-d @"$__tmp.data" >"$__tmp.resp" || exit 1
+	-d @"$__tmp.data" >"$__tmp.resp"
 
-jq --arg pw "$password" '. + {password: $pw}' "$__tmp.resp" >"$__acc" || exit 1
+if [[ $? -ne 0 ]]; then
+	printf "error: account creation failed\n" >&2
+	exit 1
+fi
+
+jq --arg pw "$password" '. + {password: $pw}' "$__tmp.resp" >"$__acc"
+if [[ $? -ne 0 ]]; then
+	printf "error: failed to save account data\n" >&2
+	exit 1
+fi
 
 printf 'created\n'
 printf 'address: %s\n' "$address"

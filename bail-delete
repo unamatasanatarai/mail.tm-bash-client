@@ -1,7 +1,26 @@
 #!/usr/bin/env bash
 
-# authentication
-. "${0%/*}/bail-token"
+__url="https://api.mail.tm"
+__cache="${XDG_STATE_HOME:-$HOME/.config/state}/bail"
+__acc="$__cache/account"
+__v="0.5"
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+	printf 'bail-delete v%s\n' "$__v"
+	printf 'usage: bail-delete [-y] [-h] [-v]\n\n'
+	printf 'permanently delete the current account from mail.tm and remove local cache\n\n'
+	printf 'options:\n'
+	printf '  -y              bypass confirmation prompt\n'
+	exit 0
+fi
+
+if [[ "$1" == "-v" || "$1" == "--version" ]]; then
+	printf 'bail-delete v%s\n' "$__v"
+	exit 0
+fi
+
+if [[ -z "$__token" ]]; then
+	. "${0%/*}/bail-token"
+fi
 
 if [[ "$1" != "-y" ]] && [[ -t 0 ]]; then
 	printf "Are you sure you want to delete account %s? [y/N] " "$addr"
@@ -14,6 +33,11 @@ fi
 
 curl -s -X DELETE "$__url/accounts/$acc_id" \
 	-H "Authorization: Bearer $__token" >/dev/null
+
+if [[ $? -ne 0 ]]; then
+	printf "error: failed to delete account from server\n" >&2
+	exit 1
+fi
 
 rm -f "$__acc"
 printf 'deleted\n'
