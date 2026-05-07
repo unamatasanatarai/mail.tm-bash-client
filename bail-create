@@ -4,37 +4,37 @@ __url="https://api.mail.tm"
 __cache="${XDG_STATE_HOME:-$HOME/.config/state}/bail"
 __acc="$__cache/account"
 __tmp="/tmp/bail-create.$$.tmp"
-__v="0.5"
+__v="0.6"
 
 if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
-    printf 'bail-create v%s\n' "$__v"
-    printf 'Usage: bail create [prefix] [-p password]\n\n'
-    printf 'Provision a new temporary mail account. Deletes the previous account if present.\n\n'
-    printf 'Arguments:\n'
-    printf '  prefix          Custom email prefix (default: user_RANDOM)\n\n'
-    printf 'Options:\n'
-    printf '  -p password     Set a custom password for the account\n'
-    printf '  -h, --help      Show this help message\n\n'
-    printf 'Examples:\n'
-    printf '  bail create\n'
-    printf '  bail create myalias\n'
-    printf '  bail create myalias -p s3cr3tpw\n'
-    exit 0
+	printf 'bail-create v%s\n' "$__v"
+	printf 'Usage: bail create [prefix] [-p password]\n\n'
+	printf 'Provision a new temporary mail account. Deletes the previous account if present.\n\n'
+	printf 'Arguments:\n'
+	printf '  prefix          Custom email prefix (default: user_RANDOM)\n\n'
+	printf 'Options:\n'
+	printf '  -p password     Set a custom password for the account\n'
+	printf '  -h, --help      Show this help message\n\n'
+	printf 'Examples:\n'
+	printf '  bail create\n'
+	printf '  bail create myalias\n'
+	printf '  bail create myalias -p s3cr3tpw\n'
+	exit 0
 fi
 
 if [[ "$1" == "-v" || "$1" == "--version" ]]; then
-    printf 'bail-create v%s\n' "$__v"
-    exit 0
+	printf 'bail-create v%s\n' "$__v"
+	exit 0
 fi
 
 trap 'rm -f "$__tmp"*' EXIT
 
 if [[ ! -d "$__cache" ]]; then
-    mkdir -p "$__cache" || exit 1
+	mkdir -p "$__cache" || exit 1
 fi
 
 if [[ -s "$__acc" ]]; then
-    "${0%/*}/bail-delete" -y >/dev/null 2>&1
+	"${0%/*}/bail-delete" -y >/dev/null 2>&1
 fi
 
 password=''
@@ -42,17 +42,17 @@ custom=0
 prefix=''
 
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-    -p)
-        shift
-        password="$1"
-        custom=1
-        ;;
-    *)
-        prefix="$1"
-        ;;
-    esac
-    shift
+	case "$1" in
+	-p)
+		shift
+		password="$1"
+		custom=1
+		;;
+	*)
+		prefix="$1"
+		;;
+	esac
+	shift
 done
 
 [[ "$custom" -eq 1 ]] || password="p_${RANDOM}${RANDOM}"
@@ -61,27 +61,29 @@ done
 domain="$__domain"
 
 if [[ -n "$prefix" ]]; then
-    address="$prefix@$domain"
+	address="$prefix@$domain"
 else
-    address="user_${RANDOM}@$domain"
+	address="user_${RANDOM}@$domain"
 fi
 
 printf '{"address":"%s","password":"%s"}' "$address" "$password" >"$__tmp.data"
 curl -s "$__url/accounts" \
-    -H 'Content-Type: application/json' \
-    -d @"$__tmp.data" >"$__tmp.resp"
+	-H 'Content-Type: application/json' \
+	-d @"$__tmp.data" >"$__tmp.resp"
 
 if [[ $? -ne 0 ]]; then
-    printf "error: account creation failed\n" >&2
-    exit 1
+	printf "error: account creation failed\n" >&2
+	exit 1
 fi
 
 jq --arg pw "$password" '. + {password: $pw}' "$__tmp.resp" >"$__acc"
 if [[ $? -ne 0 ]]; then
-    printf "error: failed to save account data\n" >&2
-    exit 1
+	printf "error: failed to save account data\n" >&2
+	exit 1
 fi
 
-printf 'created\n'
-printf 'address: %s\n' "$address"
-printf 'password: %s\n' "$password"
+if [[ -t 1 ]]; then
+	printf "%s\n" "$address"
+else
+	printf "%s" "$address"
+fi
