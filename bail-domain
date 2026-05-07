@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+__url="https://api.mail.tm"
+__tmp="/tmp/bail-domain.$$.tmp"
+__v="0.5"
+
+if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
+    printf 'bail-domain v%s\n' "$__v"
+    printf 'Usage: bail domain\n\n'
+    printf 'Display the first available domain from Mail.tm.\n\n'
+    printf 'Options:\n'
+    printf '  -h, --help      Show this help message\n'
+    printf '  -v, --version   Show version information\n\n'
+    printf 'Examples:\n'
+    printf '  bail domain\n'
+    exit 0
+fi
+
+if [[ "$1" == "-v" || "$1" == "--version" ]]; then
+    printf 'bail-domain v%s\n' "$__v"
+    exit 0
+fi
+
+trap 'rm -f "$__tmp"*' EXIT
+
+curl -s "$__url/domains" >"$__tmp"
+if [[ $? -ne 0 ]]; then
+    printf "error: connection failed\n" >&2
+    exit 1
+fi
+
+__domain=$(jq -r '."hydra:member"[0].domain' "$__tmp")
+
+if [[ -n "$__domain" && "$__domain" != "null" ]]; then
+    if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+        printf '%s\n' "$__domain"
+    fi
+else
+    printf "error: no domains available\n" >&2
+    exit 1
+fi

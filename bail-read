@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+__url="https://api.mail.tm"
+__v="0.5"
+
+if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
+    printf 'bail-read v%s\n' "$__v"
+    printf 'Usage: bail read <index>\n\n'
+    printf 'Display the content of a specific message from the inbox.\n\n'
+    printf 'Arguments:\n'
+    printf '  index           The numeric index of the message from the list\n\n'
+    printf 'Options:\n'
+    printf '  -h, --help      Show this help message\n'
+    printf '  -v, --version   Show version information\n\n'
+    printf 'Examples:\n'
+    printf '  bail read 1\n'
+    exit 0
+fi
+
+if [[ "$1" == "-v" || "$1" == "--version" ]]; then
+    printf 'bail-read v%s\n' "$__v"
+    exit 0
+fi
+
+if [[ -z "$__token" ]]; then
+    . "${0%/*}/bail-token"
+fi
+
+num="$1"
+if [[ -z "$num" ]]; then
+    printf 'error: provide message index\n' >&2
+    exit 1
+fi
+
+__tmp_read="/tmp/bail-read.$$.tmp"
+curl -s "$__url/messages" \
+    -H "Authorization: Bearer $__token" >"$__tmp_read"
+
+if [[ $? -ne 0 ]]; then
+    printf "error: failed to fetch list\n" >&2
+    exit 1
+fi
+
+count=$(jq -r '."hydra:member" | length' "$__tmp_read")
+
+if ! [[ "$num" =~ ^[0-9]+$ ]] || ((num < 1 || num > count)); then
+    printf "error: invalid index. total: %d\n" "$count" >&2
+    rm -f "$__tmp_read"*
+    exit 1
+fi
+
+idx=$((num - 1))
+msg_id=$(jq -r ".\"hydra:member\"[$idx].id" "$__tmp_read")
+
+curl -s "$__url/messages/$msg_id" \
+    -H "Authorization: Bearer $__token" >"$__tmp_read.msg"
+
+if [[ $? -ne 0 ]]; then
+    printf "error: failed to fetch message\n" >&2
+    exit 1
+fi
+
+printf 'from:\n'
+jq -r '.from.address' "$__tmp_read.msg"
+printf '\nsubject:\n'
+jq -r '.subject' "$__tmp_read.msg"
+printf '\nmessage:\n'
+jq -r '
+    if .text != null and .text != "" then
+        .text
+    elif .html != null and (.html | length) > 0 then
+        .html[0]
+    else
+        "[no content]"
+    end
+' "$__tmp_read.msg"
+
+rm -f "$__tmp_read"*

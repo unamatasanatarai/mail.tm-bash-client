@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+__url="https://api.mail.tm"
+__v="0.5"
+
+if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
+    printf 'bail-messages v%s\n' "$__v"
+    printf 'Usage: bail messages\n\n'
+    printf 'List all messages in the mailbox with index, sender, and subject.\n\n'
+    printf 'Options:\n'
+    printf '  -h, --help      Show this help message\n'
+    printf '  -v, --version   Show version information\n\n'
+    printf 'Examples:\n'
+    printf '  bail messages\n'
+    exit 0
+fi
+
+if [[ "$1" == "-v" || "$1" == "--version" ]]; then
+    printf 'bail-messages v%s\n' "$__v"
+    exit 0
+fi
+
+if [[ -z "$__token" ]]; then
+    . "${0%/*}/bail-token"
+fi
+
+__tmp_msgs="/tmp/bail-messages.$$.tmp"
+curl -s "$__url/messages" \
+    -H "Authorization: Bearer $__token" >"$__tmp_msgs"
+
+if [[ $? -ne 0 ]]; then
+    printf "error: failed to fetch messages\n" >&2
+    exit 1
+fi
+
+count=$(jq -r '."hydra:member" | length' "$__tmp_msgs")
+
+if [[ "$count" -eq 0 ]]; then
+    printf 'no messages\n'
+    rm -f "$__tmp_msgs"*
+    exit 0
+fi
+
+jq -r '."hydra:member"[] | "\(.from.address)\t\(.subject)"' "$__tmp_msgs" >"$__tmp_msgs.list"
+i=1
+while IFS=$'\t' read -r from subject; do
+    printf '%d\t%s\t%s\n' "$i" "$from" "$subject"
+    i=$((i + 1))
+done <"$__tmp_msgs.list"
+
+rm -f "$__tmp_msgs"*

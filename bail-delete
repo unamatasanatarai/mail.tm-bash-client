@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+__url="https://api.mail.tm"
+__cache="${XDG_STATE_HOME:-$HOME/.config/state}/bail"
+__acc="$__cache/account"
+__v="0.5"
+
+if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
+    printf 'bail-delete v%s\n' "$__v"
+    printf 'Usage: bail delete [-y]\n\n'
+    printf 'Permanently delete the current account and remove local configuration.\n\n'
+    printf 'Options:\n'
+    printf '  -y              Bypass confirmation prompt\n'
+    printf '  -h, --help      Show this help message\n'
+    printf '  -v, --version   Show version information\n\n'
+    printf 'Examples:\n'
+    printf '  bail delete\n'
+    printf '  bail delete -y\n'
+    exit 0
+fi
+
+if [[ "$1" == "-v" || "$1" == "--version" ]]; then
+    printf 'bail-delete v%s\n' "$__v"
+    exit 0
+fi
+
+if [[ -z "$__token" ]]; then
+    . "${0%/*}/bail-token"
+fi
+
+if [[ "$1" != "-y" ]] && [[ -t 0 ]]; then
+    printf "Are you sure you want to delete account %s? [y/N] " "$addr"
+    read -r resp
+    if [[ ! "$resp" =~ ^[yY](es)?$ ]]; then
+        printf "Aborted.\n"
+        exit 0
+    fi
+fi
+
+curl -s -X DELETE "$__url/accounts/$acc_id" \
+    -H "Authorization: Bearer $__token" >/dev/null
+
+if [[ $? -ne 0 ]]; then
+    printf "error: deletion failed\n" >&2
+    exit 1
+fi
+
+rm -f "$__acc"
+printf 'deleted\n'

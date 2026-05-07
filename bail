@@ -1,151 +1,37 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+__v="0.5"
 
-# -----------------------------------------------------------------------------
-# CONFIG
-# -----------------------------------------------------------------------------
+cmd="${1:-help}"
+[[ $# -gt 0 ]] && shift
 
-__VERSION="0.1"
-__NAME="Template App"
-__FILE=$(basename "$0")
-__CACHE=${XDG_STATE_HOME:=$HOME/.config/state}/bail
-readonly __VERSION __FILE __NAME __CACHE
-mkdir -p "$__CACHE"
+if [[ "$cmd" == "help" && $# -gt 0 ]]; then
+    cmd="$1"
+    set -- "--help"
+fi
 
-current_account="$__CACHE"/account
-touch "$current_account"
-
-url="https://api.mail.tm"
-readonly url
-
-password='D~%8W_UE'
-custom_password=0
-
-# -----------------------------------------------------------------------------
-# PRIVATE interfaces
-# -----------------------------------------------------------------------------
-
-function _get_domain {
-  domain=$(curl -s "$url/domains" | jq -r '."hydra:member"[0].domain')
-  echo "$domain"
-}
-
-function _random {
-  openssl rand -hex "${1:-5}"
-}
-
-function _gen_password {
-  if [ "$custom_password" == 0 ]; then
-    custom_password=1
-    if command -v pwgen &> /dev/null; then
-      password=$(pwgen -Cns 20 1)
-    else
-      password=$(_random 10)
-    fi
-  fi
-}
-
-# -----------------------------------------------------------------------------
-# PUBLIC interfaces
-# -----------------------------------------------------------------------------
-
-function create { # Create a new account, create [prefix]
-  __parse_options "$@"
-  _gen_password
-  domain=$(_get_domain)
-  if [[ -n $* ]]; then
-    address=$*"@$domain"
-  else
-    address=$(_random)"@$domain"
-  fi
-  data='{ "address":"'$address'", "password":"'$password'" }'
-  account=$(curl -s "$url/accounts" \
-    -H 'Content-Type: application/json' \
-    -d "$data")
-  echo "$account" | jq '.+= {"password":"'"$password"'"}' > "$__CACHE"/account
-  echo "created"
-  jq ".address" "$current_account"
-}
-
-function me { # List all created acounts
-  address=$(jq -r ".address" < "$current_account")
-  pass=$(jq -r ".password" < "$current_account")
-  token=$(_token "$address" "$pass")
-  curl -s "$url/me" -H "Authorization:Bearer $token" | jq
-}
-
-function delete { # Delete an account
-  __parse_options "$@"
-  id=$(jq -r '.id' < "$current_account")
-  address=$(jq -r ".address" < "$current_account")
-  pass=$(jq -r ".password" < "$current_account")
-  token=$(_token "$address" "$pass")
-  curl -s -XDELETE "$url/accounts/$id" -H "Authorization:Bearer $token"
-  rm "$current_account"
-  echo "deleted current account"
-}
-
-function _token {
-  curl -s "$url/token" \
-    -H 'Content-Type: application/json' \
-    -d '{"address":"'"$1"'", "password":"'"$2"'"}' \
-    | jq -r ".token"
-}
-
-function messages { # get messages
-  address=$(jq -r ".address" < "$current_account")
-  pass=$(jq -r ".password" < "$current_account")
-  token=$(_token "$address" "$pass")
-  messages=$(curl -s "$url/messages" -H "Authorization:Bearer $token")
-  opts=$(echo "$messages" | jq -r '."hydra:member"[] | .from.name +"<"+ .from.address +">√"+ .subject' | column -t -s "√")
-  mapfile -t opts <<< "$opts"
-  c=0
-  for i in "${opts[@]}"; do
-    echo -e "$c\t$i"
-    c=$((c + 1))
-  done
-  echo -n "pick a number: "
-  read -r picked
-  msg=$(echo "$messages" | jq -r '."hydra:member"['"$picked"'] .id')
-  message=$(curl -s "$url/messages/$msg" -H "Authorization:Bearer $token")
-  echo "from:"
-  echo "$message" | jq -r '.from.name + "<" + .from.address + ">"'
-  echo ""
-  echo "subject:"
-  echo "$message" | jq -r '.subject'
-  echo ""
-  echo "message:"
-  echo -e "$(echo "$message" | jq -r '.text')"
-}
-
-# -----------------------------------------------------------------------------
-
-function help { # Display this helpful help information
-  local functions
-  functions=$(grep -E "^function [^_]*?$" "$0" | sed -E "s/ *{ *# */#/g" | column -t -s '#' | sed -E "s/^function /   /g" | sort)
-  echo "$__NAME v $__VERSION"
-  echo "Usage: $__FILE <task> [args]"
-  echo ""
-  echo "Tasks:"
-  echo "$functions"
-  echo "args:"
-  echo "   -p   define custom password"
-  echo ""
-}
-
-function __parse_options {
-  while getopts "p:" o; do
-    case "$o" in
-      p)
-        password=${OPTARG:-$password}
-        custom_password=1
-        ;;
-      *) ;;
-
-    esac
-  done
-  shift $((OPTIND - 1))
-}
-
-"${@:-help}"
+case "$cmd" in
+create | token | me | messages | read | delete | domain)
+    "${0%/*}/bail-$cmd" "$@"
+    ;;
+help | *)
+    printf 'Bail - High-performance Mail.tm CLI v%s\n\n' "$__v"
+    printf 'Usage: bail <command> [options]\n\n'
+    printf 'Commands:\n'
+    printf '  create [prefix] [-p pw]   Provision a new account (replaces current)\n'
+    printf '  domain                    Display the first available domain\n'
+    printf '  token                     Generate an API authentication token\n'
+    printf '  me                        Show current account profile and quota\n'
+    printf '  messages                  List all messages in the mailbox\n'
+    printf '  read <index>              Display content of a specific message\n'
+    printf '  delete                    Permanently wipe account and local state\n\n'
+    printf 'Options:\n'
+    printf '  -h, --help                Show help for a specific command\n'
+    printf '  -v, --version             Show version information\n\n'
+    printf 'Examples:\n'
+    printf '  bail create myuser -p s3cr3t\n'
+    printf '  bail messages\n'
+    printf '  bail help read\n'
+    exit 0
+    ;;
+esac
