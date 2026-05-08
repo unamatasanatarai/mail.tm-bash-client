@@ -27,16 +27,32 @@ Bail: a high-performance, modular Bash command-line interface for the Mail.tm AP
 - `bail-domain`: Fetches and displays the first available domain.
 - `bail-me`: Shows current account profile data.
 - `bail-messages`: Lists all messages in the mailbox.
+- `bail-email`: Displays the current account email address.
+- `bail-password`: Displays the current account password.
 - `bail-read`: Displays the content of a specific message by index.
 - `bail-token`: Generates an API authentication token from local account data.
 
-## Installation Instructions
+## Installation
 
-1. Clone the repository to your local machine.
-2. Ensure you have `curl` and `jq` installed on your system.
-3. Make all scripts executable:
+1. **Clone the repository:**
    ```bash
-   chmod +x bail bail-*
+   git clone https://github.com/unamatasanatarai/mail.tm-bash-api-client.git
+   cd mail.tm-bash-api-client
+   ```
+
+2. **Run the installer:**
+   The `install.sh` script copies all `bail*` utilities to `~/.local/bin` and sets the necessary permissions.
+   ```bash
+   ./install.sh
+   ```
+
+3. **Check Dependencies:**
+   Ensure you have `curl` and `jq` installed on your system.
+
+4. **Update PATH:**
+   If `~/.local/bin` is not in your `PATH`, add the following to your shell profile (`.bashrc`, `.zshrc`, etc.):
+   ```bash
+   export PATH="$HOME/.local/bin:$PATH"
    ```
 
 ## Usage
