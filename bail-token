@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 __url="https://api.mail.tm"
-__cache="${XDG_STATE_HOME:-$HOME/.config/state}/bail"
+__cache="${XDG_STATE_HOME:-$HOME/.local/state}/bail"
 __acc="$__cache/account"
 __tmp="/tmp/bail-token.$$.tmp"
 __v="0.5"

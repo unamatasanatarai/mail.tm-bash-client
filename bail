@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 __v="0.6"
-__acc="${XDG_STATE_HOME:-$HOME/.config/state}/bail/account"
+__acc="${XDG_STATE_HOME:-$HOME/.local/state}/bail/account"
 
 cmd="${1:-messages}"
 [[ $# -gt 0 ]] && shift

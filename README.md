@@ -115,7 +115,7 @@ install.sh      One-shot installer to $XDG_BIN_HOME / ~/.local/bin
 Account credentials and state are stored in:
 
 ```
-${XDG_STATE_HOME:-$HOME/.config/state}/bail/account
+${XDG_STATE_HOME:-$HOME/.local/state}/bail/account
 ```
 
 The file is a JSON object containing `address`, `id`, and `password`. It is created on `bail new` and removed on `bail delete`.
