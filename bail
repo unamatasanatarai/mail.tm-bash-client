@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-__v="0.5"
+__v="0.6"
+__acc="${XDG_STATE_HOME:-$HOME/.config/state}/bail/account"
 
-cmd="${1:-help}"
+cmd="${1:-messages}"
 [[ $# -gt 0 ]] && shift
 
 if [[ "$cmd" == "help" && $# -gt 0 ]]; then
@@ -10,26 +11,35 @@ if [[ "$cmd" == "help" && $# -gt 0 ]]; then
     set -- "--help"
 fi
 
+if [[ "$cmd" == "messages" && ! -s "$__acc" ]]; then
+    exec "${0%/*}/bail-new" "$@"
+fi
+
+if [[ "$cmd" == "read" && $# -eq 0 ]]; then
+    "${0%/*}/bail-messages"
+    exit 0
+fi
+
 case "$cmd" in
-create | token | me | messages | read | delete | domain)
+new | token | me | messages | read | delete | domain)
     "${0%/*}/bail-$cmd" "$@"
     ;;
 help | *)
     printf 'Bail - High-performance Mail.tm CLI v%s\n\n' "$__v"
     printf 'Usage: bail <command> [options]\n\n'
     printf 'Commands:\n'
-    printf '  create [prefix] [-p pw]   Provision a new account (replaces current)\n'
+    printf '  new [prefix] [-p pw]      Provision a new account (replaces current)\n'
+    printf '  messages                  List all messages in the mailbox\n'
+    printf '  read <index>              Display content of a specific message\n'
     printf '  domain                    Display the first available domain\n'
     printf '  token                     Generate an API authentication token\n'
     printf '  me                        Show current account profile and quota\n'
-    printf '  messages                  List all messages in the mailbox\n'
-    printf '  read <index>              Display content of a specific message\n'
     printf '  delete                    Permanently wipe account and local state\n\n'
     printf 'Options:\n'
     printf '  -h, --help                Show help for a specific command\n'
     printf '  -v, --version             Show version information\n\n'
     printf 'Examples:\n'
-    printf '  bail create myuser -p s3cr3t\n'
+    printf '  bail new myuser -p s3cr3t\n'
     printf '  bail messages\n'
     printf '  bail help read\n'
     exit 0

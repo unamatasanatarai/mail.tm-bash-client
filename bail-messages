@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 __url="https://api.mail.tm"
-__v="0.5"
+__cache="${XDG_STATE_HOME:-$HOME/.config/state}/bail"
+__acc="$__cache/account"
+__v="0.6"
 
 if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
     printf 'bail-messages v%s\n' "$__v"
@@ -23,6 +25,8 @@ fi
 if [[ -z "$__token" ]]; then
     . "${0%/*}/bail-token"
 fi
+
+jq -r '.address' "$__acc" 2>/dev/null
 
 __tmp_msgs="/tmp/bail-messages.$$.tmp"
 curl -s "$__url/messages" \

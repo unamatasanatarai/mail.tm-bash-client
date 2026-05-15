@@ -4,7 +4,7 @@ __url="https://api.mail.tm"
 __cache="${XDG_STATE_HOME:-$HOME/.config/state}/bail"
 __acc="$__cache/account"
 __tmp="/tmp/bail-create.$$.tmp"
-__v="0.5"
+__v="0.6"
 
 if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
     printf 'bail-create v%s\n' "$__v"

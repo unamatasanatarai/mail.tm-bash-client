@@ -1,73 +1,129 @@
-# Bail - Mail.tm Bash CLI Client
+# Bail — Mail.tm Bash CLI
 
-[![Bash](https://img.shields.io/badge/Language-Bash-4EAA25.svg)](https://www.gnu.org/software/bash/) [![API](https://img.shields.io/badge/API-Mail.tm-blue.svg)](https://mail.tm/) [![Dependencies](https://img.shields.io/badge/dependencies-curl%20|%20jq-orange.svg)](https://github.com/stedolan/jq) [![OS](https://img.shields.io/badge/OS-Linux%20|%20macOS-blueviolet.svg)]()
+[![Bash](https://img.shields.io/badge/language-Bash-4EAA25?logo=gnubash&logoColor=white)](https://www.gnu.org/software/bash/)
+[![API](https://img.shields.io/badge/API-Mail.tm-0078D4)](https://mail.tm/)
+[![deps](https://img.shields.io/badge/deps-curl%20%7C%20jq-orange)](https://stedolan.github.io/jq/)
+[![XDG](https://img.shields.io/badge/XDG-compliant-informational)](https://specifications.freedesktop.org/basedir-spec/latest/)
+[![OS](https://img.shields.io/badge/OS-Linux%20%7C%20macOS-blueviolet)]()
+[![version](https://img.shields.io/badge/version-0.6-success)]()
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-![Bail Logo](look-at-me.jpg "Bail: The Bash Command-Line Interface for Mail.tm")
+![Bail](look-at-me.jpg)
 
-Bail: a high-performance, modular Bash command-line interface for the Mail.tm API. It enables users to quickly provision temporary email accounts, manage authentication tokens, and read messages directly from the terminal.
+A modular Bash CLI for the [Mail.tm](https://mail.tm/) API. Bail lets you provision and manage temporary email accounts, read messages, and interact with the Mail.tm REST API entirely from the terminal — no browser required.
+
+---
 
 ## Features
-- Provision new temporary email accounts with optional custom prefixes and passwords
-- Automatically delete the previous account when creating a new one
-- Authenticate and manage API tokens via local state caching
-- Retrieve and display the first available domain from Mail.tm
-- View current account profile data
-- List all messages in the inbox
-- Read the content of a specific message
 
-## Tech Stack
-- Bash
+- **Smart defaults** — `bail` with no arguments opens the inbox; redirects to account creation if none exists
+- **Account provisioning** — create a temporary account with optional custom prefix and password
+- **Auto-cleanup** — creating a new account silently deletes the existing one first
+- **Token management** — generates API bearer tokens from cached local credentials
+- **Inbox listing** — lists messages with index, sender, and subject; shows the active address at the top
+- **Message reading** — fetches and displays full message content (text or HTML fallback) by index
+- **Account deletion** — removes the account from Mail.tm and wipes local state; supports `-y` to skip confirmation
+- **Domain query** — prints the first available Mail.tm domain; usable as a sourced library
+
+---
+
+## Requirements
+
+- `bash` 4+
 - `curl`
 - `jq`
 
-## Project Structure
-- `bail`: Main dispatcher script that routes commands to the corresponding components.
-- `bail-create`: Provisions a new Mail.tm account and deletes the existing one.
-- `bail-delete`: Wipes the current account from the server and local state.
-- `bail-domain`: Fetches and displays the first available domain.
-- `bail-me`: Shows current account profile data.
-- `bail-messages`: Lists all messages in the mailbox.
-- `bail-read`: Displays the content of a specific message by index.
-- `bail-token`: Generates an API authentication token from local account data.
+---
 
-## Installation Instructions
+## Installation
 
-1. Clone the repository to your local machine.
-2. Ensure you have `curl` and `jq` installed on your system.
-3. Make all scripts executable:
-   ```bash
-   chmod +x bail bail-*
-   ```
+### One-liner
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/unamatasanatarai/mail.tm-bash-client/master/install.sh | bash
+```
+
+The installer downloads all scripts to `${XDG_BIN_HOME:-$HOME/.local/bin}` and marks them executable. If that directory is not on your `$PATH`, it prints the export line to add to your shell profile.
+
+### Manual
+
+```bash
+git clone https://github.com/unamatasanatarai/mail.tm-bash-client.git
+cd mail.tm-bash-client
+chmod +x bail bail-*
+```
+
+---
 
 ## Usage
 
-Use the `bail` dispatcher to run commands:
-
-```bash
-./bail <command> [options]
+```
+bail [command] [options]
 ```
 
+Calling `bail` with no arguments is equivalent to `bail messages`. If no account exists, it runs `bail new` automatically.
+
+| Command | Description |
+|---|---|
+| `new [prefix] [-p pw]` | Provision a new account (replaces current) |
+| `messages` | List all messages in the mailbox |
+| `read <index>` | Display content of a specific message |
+| `me` | Show current account profile and quota |
+| `token` | Print the current API authentication token |
+| `domain` | Display the first available Mail.tm domain |
+| `delete [-y]` | Permanently wipe account and local state |
+
 ### Examples
-- **Create an account:**
-  ```bash
-  ./bail create myalias -p mypassword
-  ```
-- **List messages:**
-  ```bash
-  ./bail messages
-  ```
-- **Read a message:**
-  ```bash
-  ./bail read 1
-  ```
-- **View profile:**
-  ```bash
-  ./bail me
-  ```
-- **Delete account:**
-  ```bash
-  ./bail delete
-  ```
+
+```bash
+# Create an account with a custom prefix and password
+bail new myalias -p s3cr3tpw
+
+# Open inbox (default action)
+bail
+
+# Read message #2
+bail read 2
+
+# Delete account without confirmation
+bail delete -y
+
+# Get help for a specific command
+bail help read
+```
+
+---
+
+## Project Structure
+
+```
+bail            Router — dispatches subcommands, enforces smart defaults
+bail-new        Provisions a new Mail.tm account; auto-deletes the previous one
+bail-messages   Lists inbox messages; displays active address as header
+bail-read       Fetches and renders a message by numeric index
+bail-me         Prints current account profile JSON
+bail-token      Generates and caches a bearer token from local credentials
+bail-delete     Deletes the account from Mail.tm and removes local state
+bail-domain     Fetches the first available domain (also usable via source)
+install.sh      One-shot installer to $XDG_BIN_HOME / ~/.local/bin
+```
+
+---
 
 ## Configuration
-The client stores local state (such as account credentials) in the directory specified by `XDG_STATE_HOME`. If this environment variable is not set, it defaults to `$HOME/.config/state/bail`.
+
+Account credentials and state are stored in:
+
+```
+${XDG_STATE_HOME:-$HOME/.config/state}/bail/account
+```
+
+The file is a JSON object containing `address`, `id`, and `password`. It is created on `bail new` and removed on `bail delete`.
+
+No manual configuration is required.
+
+---
+
+## License
+
+[MIT](LICENSE)
