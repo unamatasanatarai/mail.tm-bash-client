@@ -4,7 +4,7 @@ __url="https://api.mail.tm"
 __cache="${XDG_STATE_HOME:-$HOME/.config/state}/bail"
 __acc="$__cache/account"
 __tmp="/tmp/bail-create.$$.tmp"
-__v="0.6"
+__v="0.7"
 
 if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
     printf 'bail-create v%s\n' "$__v"
@@ -76,12 +76,16 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-jq --arg pw "$password" '. + {password: $pw}' "$__tmp.resp" >"$__acc"
+jq --arg pw "$password" '.password = $pw' \
+    "$__tmp.resp" >"$__acc"
+
 if [[ $? -ne 0 ]]; then
     printf "error: failed to save account data\n" >&2
     exit 1
 fi
 
-printf 'created\n'
-printf 'address: %s\n' "$address"
-printf 'password: %s\n' "$password"
+if [[ -t 1 ]]; then
+    printf 'address: %s\n' "$address"
+else
+    printf '%s' "$address"
+fi

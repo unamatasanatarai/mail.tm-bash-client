@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 __url="https://api.mail.tm"
-__v="0.5"
+__acc="${XDG_STATE_HOME:-$HOME/.config/state}/bail/account"
+__v="0.6"
 
 if [[ "$1" == "-h" || "$1" == "--help" || "$1" == "help" ]]; then
     printf 'bail-me v%s\n' "$__v"
@@ -33,5 +34,5 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-jq . "$__tmp_me"
+jq -s '.[0] * {password: .[1].password}' "$__tmp_me" "$__acc"
 rm -f "$__tmp_me"

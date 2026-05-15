@@ -36,6 +36,7 @@ acc_id=$(jq -r '.id' "$__acc")
 
 if [[ -z "$addr" || -z "$pass" || "$addr" == "null" || "$pass" == "null" ]]; then
     printf "error: invalid account data. run 'bail create' again.\n" >&2
+    printf "for details, run 'cat %s'\n" "$__acc" >&2
     exit 1
 fi
 
