@@ -20,6 +20,10 @@ if [[ "$cmd" == "read" && $# -eq 0 ]]; then
     exit 0
 fi
 
+if [[ "$cmd" =~ ^[0-9]+$ ]]; then
+    exec "${0%/*}/bail-read" "$cmd" "$@"
+fi
+
 case "$cmd" in
 new | token | me | messages | read | delete | domain)
     "${0%/*}/bail-$cmd" "$@"
