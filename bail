@@ -1,51 +1,71 @@
 #!/usr/bin/env bash
 
-__v="0.6"
+__v="0.7"
 __acc="${XDG_STATE_HOME:-$HOME/.local/state}/bail/account"
 
-cmd="${1:-messages}"
+cmd="${1:-read}"
 [[ $# -gt 0 ]] && shift
 
 if [[ "$cmd" == "help" && $# -gt 0 ]]; then
-    cmd="$1"
-    set -- "--help"
+	cmd="$1"
+	set -- "--help"
 fi
 
-if [[ "$cmd" == "messages" && ! -s "$__acc" ]]; then
-    exec "${0%/*}/bail-new" "$@"
+if [[ ("$cmd" == "messages" || "$cmd" == "read") && ! -s "$__acc" ]]; then
+	exec "${0%/*}/bail-new" "$@"
 fi
 
 if [[ "$cmd" == "read" && $# -eq 0 ]]; then
-    "${0%/*}/bail-messages"
-    exit 0
+	list=$("${0%/*}/bail-messages")
+	if [[ $? -eq 0 && -n "$list" ]]; then
+		filtered=""
+		while IFS= read -r line; do
+			if [[ "$line" =~ ^[0-9] ]]; then
+				filtered+="$line"$'\n'
+			fi
+		done <<<"$list"
+
+		if [[ -n "$filtered" ]]; then
+			email=$(jq -r '.address' "$__acc" 2>/dev/null)
+			selected=$(printf '%s' "$filtered" | peco --prompt "${email:+$email > }")
+			if [[ -n "$selected" ]]; then
+				index="${selected%%[$'\t ']*}"
+				exec "${0%/*}/bail-read" "$index"
+			fi
+		fi
+	fi
+	exit 0
 fi
 
 if [[ "$cmd" =~ ^[0-9]+$ ]]; then
-    exec "${0%/*}/bail-read" "$cmd" "$@"
+	exec "${0%/*}/bail-read" "$cmd" "$@"
 fi
 
 case "$cmd" in
 new | token | me | messages | read | delete | domain)
-    "${0%/*}/bail-$cmd" "$@"
-    ;;
+	"${0%/*}/bail-$cmd" "$@"
+	;;
 help | *)
-    printf 'Bail - High-performance Mail.tm CLI v%s\n\n' "$__v"
-    printf 'Usage: bail <command> [options]\n\n'
-    printf 'Commands:\n'
-    printf '  new [prefix] [-p pw]      Provision a new account (replaces current)\n'
-    printf '  messages                  List all messages in the mailbox\n'
-    printf '  read <index>              Display content of a specific message\n'
-    printf '  domain                    Display the first available domain\n'
-    printf '  token                     Generate an API authentication token\n'
-    printf '  me                        Show current account profile and quota\n'
-    printf '  delete                    Permanently wipe account and local state\n\n'
-    printf 'Options:\n'
-    printf '  -h, --help                Show help for a specific command\n'
-    printf '  -v, --version             Show version information\n\n'
-    printf 'Examples:\n'
-    printf '  bail new myuser -p s3cr3t\n'
-    printf '  bail messages\n'
-    printf '  bail help read\n'
-    exit 0
-    ;;
+	printf 'Bail - High-performance Mail.tm CLI v%s\n\n' "$__v"
+	printf 'Usage: bail [command|index] [options]\n\n'
+	printf 'Commands:\n'
+	printf '  new [prefix] [-p pw]      Provision a new account (replaces current)\n'
+	printf '  messages                  List all messages in the mailbox\n'
+	printf '  read [<index>]            Display content of a specific message (interactive via peco if index is omitted)\n'
+	printf '  domain                    Display the first available domain\n'
+	printf '  token                     Generate an API authentication token\n'
+	printf '  me                        Show current account profile and quota\n'
+	printf '  delete                    Permanently wipe account and local state\n\n'
+	printf 'Options:\n'
+	printf '  -h, --help                Show help for a specific command\n'
+	printf '  -v, --version             Show version information\n\n'
+	printf 'Examples:\n'
+	printf '  bail                      Interactively list and select a message via peco (default)\n'
+	printf '  bail 1                    Directly display the first message\n'
+	printf '  bail read 2               Directly display the second message\n'
+	printf '  bail new myuser -p s3cr3t\n'
+	printf '  bail messages\n'
+	printf '  bail help read\n'
+	exit 0
+	;;
 esac
