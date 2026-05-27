@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+__v='0.1'
+
+case $1 in
+-h | --help | help)
+    printf 'bail-addr v%s\n' "$__v"
+    printf 'Usage: bail addr [options]\n\n'
+    printf 'Display or copy and display the E-Mail address.\n\n'
+    printf 'Options:\n'
+    printf '  -c, --copy      Copy the address to clipboard and display\n'
+    printf '  -h, --help      Show this help message\n'
+    printf '  -v, --version   Show version information\n\n'
+    printf 'Examples:\n'
+    printf '  bail addr\n'
+    printf '  bail addr -c\n'
+    exit 0
+    ;;
+-v | --version)
+    printf 'bail-addr v%s\n' "$__v"
+    exit 0
+    ;;
+'' | -c | --copy)
+    ;;
+*)
+    printf 'bail-addr: invalid option: %s\n' "$1" >&2
+    exit 64
+    ;;
+esac
+
+if ! command -v bail-me >/dev/null 2>&1; then
+    printf 'bail-addr: missing required command: bail-me\n' >&2
+    exit 69
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+    printf 'bail-addr: missing required command: jq\n' >&2
+    exit 69
+fi
+
+if ! IFS= read -r email; then
+    printf 'bail-addr: failed to read E-Mail address\n' >&2
+    exit 74
+fi < <(
+    bail-me | jq -r '.address'
+)
+
+if [[ -z $email || $email == null ]]; then
+    printf 'bail-addr: empty E-Mail address\n' >&2
+    exit 65
+fi
+
+if [[ $1 == -c || $1 == --copy ]]; then
+    if ! command -v pbcopy >/dev/null 2>&1; then
+        printf 'bail-addr: missing required command: pbcopy\n' >&2
+        exit 69
+    fi
+
+    if ! printf '%s' "$email" | pbcopy; then
+        printf 'bail-addr: failed to copy E-Mail address\n' >&2
+        exit 75
+    fi
+fi
+
+n=""
+[[ -t 1 ]] && n="\n"
+printf "%s$n" "$email"
