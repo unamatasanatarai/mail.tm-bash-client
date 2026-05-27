@@ -45,6 +45,7 @@ bail            Router — dispatches subcommands, enforces smart defaults, and 
 bail-new        Provisions a new Mail.tm account; auto-deletes the previous one
 bail-messages   Lists inbox messages; displays active address as header
 bail-read       Fetches and renders a message by numeric index
+bail-addr       Prints current E-Mail address
 bail-me         Prints current account profile JSON
 bail-token      Generates and caches a bearer token from local credentials
 bail-delete     Deletes the account from Mail.tm and removes local state
@@ -89,6 +90,7 @@ Calling `bail` with no arguments is equivalent to running `bail read`, which sta
 | `read [<index>]` | Display content of a specific message (opens interactive `peco` selector if index is omitted) |
 | `domain` | Display the first available domain |
 | `token` | Print the current API authentication token |
+| `addr` | Show current account E-Mail address |
 | `me` | Show current account profile and quota |
 | `delete [-y]` | Permanently wipe account and local state |
 | `<index>` | Direct numeric shortcut to display a message (e.g. `bail 1`) |

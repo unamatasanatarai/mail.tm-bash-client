@@ -3,7 +3,7 @@
 install_dir="${XDG_BIN_HOME:-${HOME}/.local/bin}"
 base_url="https://raw.githubusercontent.com/unamatasanatarai/mail.tm-bash-client/master"
 
-files=("bail" "bail-new" "bail-messages" "bail-read" "bail-me" "bail-token" "bail-delete" "bail-domain")
+files=("bail" "bail-new" "bail-messages" "bail-read" "bail-me" "bail-token" "bail-delete" "bail-domain" "bail-addr")
 
 if ! command -v curl >/dev/null 2>&1; then
     printf '%s\n' 'curl is required' >&2
